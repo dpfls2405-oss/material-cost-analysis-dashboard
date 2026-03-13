@@ -3,7 +3,12 @@ from __future__ import annotations
 import pandas as pd
 import numpy as np
 
-def build_product_base(receipt_df: pd.DataFrame, material_df: pd.DataFrame) -> pd.DataFrame:
+
+def build_product_base(receipt_df, material_df) -> pd.DataFrame:
+    if receipt_df is None:
+        receipt_df = pd.DataFrame()
+    if material_df is None:
+        material_df = pd.DataFrame()
     if receipt_df.empty and material_df.empty:
         return pd.DataFrame()
     base = receipt_df.merge(
@@ -21,7 +26,10 @@ def build_product_base(receipt_df: pd.DataFrame, material_df: pd.DataFrame) -> p
     base = base.sort_values(["product_id", "month"]).reset_index(drop=True)
     return base
 
+
 def calculate_monthly_totals(base: pd.DataFrame) -> pd.DataFrame:
+    if base is None or base.empty:
+        return pd.DataFrame()
     monthly = base.groupby("month", as_index=False).agg(
         total_sales=("sales_amount", "sum"),
         total_material_cost=("material_cost", "sum"),
@@ -34,9 +42,12 @@ def calculate_monthly_totals(base: pd.DataFrame) -> pd.DataFrame:
     monthly["material_ratio_change"] = monthly["material_ratio"] - monthly["prev_material_ratio"]
     return monthly
 
+
 def enrich_product_base(base: pd.DataFrame, monthly: pd.DataFrame) -> pd.DataFrame:
-    if base.empty:
-        return base
+    if base is None or base.empty:
+        return pd.DataFrame()
+    if monthly is None or monthly.empty:
+        return pd.DataFrame()
     monthly_map = monthly[["month", "total_sales"]].copy()
     enriched = base.merge(monthly_map, on="month", how="left")
     enriched["product_material_ratio"] = enriched["material_cost"] / enriched["sales_amount"].replace(0, np.nan)
@@ -66,6 +77,7 @@ def enrich_product_base(base: pd.DataFrame, monthly: pd.DataFrame) -> pd.DataFra
     )
     return enriched
 
+
 def get_top_contributors(enriched: pd.DataFrame, month: str, top_n: int = 20, ascending: bool = False) -> pd.DataFrame:
     current = enriched[enriched["month"] == month].copy()
     cols = [
@@ -83,11 +95,19 @@ def get_top_contributors(enriched: pd.DataFrame, month: str, top_n: int = 20, as
     current = current[cols].fillna(0)
     return current.sort_values("contribution", ascending=ascending).head(top_n)
 
+
 def prepare_waterfall_frame(enriched: pd.DataFrame, month: str, top_n: int = 10) -> pd.DataFrame:
     top = get_top_contributors(enriched, month, top_n=top_n, ascending=False).copy()
     return top[["product_name", "contribution"]]
 
-def build_material_usage(purchase_df: pd.DataFrame, inventory_begin_df: pd.DataFrame, inventory_end_df: pd.DataFrame) -> pd.DataFrame:
+
+def build_material_usage(purchase_df, inventory_begin_df, inventory_end_df) -> pd.DataFrame:
+    if purchase_df is None:
+        purchase_df = pd.DataFrame()
+    if inventory_begin_df is None:
+        inventory_begin_df = pd.DataFrame()
+    if inventory_end_df is None:
+        inventory_end_df = pd.DataFrame()
     if purchase_df.empty and inventory_begin_df.empty and inventory_end_df.empty:
         return pd.DataFrame()
 
@@ -102,7 +122,13 @@ def build_material_usage(purchase_df: pd.DataFrame, inventory_begin_df: pd.DataF
     frame = begin.merge(
         purchase, on=["month", "material_id"], how="outer", suffixes=("_begin", "")
     )
-    frame = frame.merge(end[["month", "material_id", "end_qty", "end_amount"]], on=["month", "material_id"], how="left")
+    # Guard: end may be empty (no inventory_end data uploaded yet)
+    if not end.empty:
+        frame = frame.merge(end[["month", "material_id", "end_qty", "end_amount"]], on=["month", "material_id"], how="left")
+    else:
+        frame["end_qty"] = np.nan
+        frame["end_amount"] = np.nan
+
     frame["material_name"] = frame["material_name_begin"].fillna(frame["material_name"])
     frame = frame.drop(columns=[c for c in frame.columns if c.endswith("_begin")], errors="ignore")
 
@@ -118,7 +144,12 @@ def build_material_usage(purchase_df: pd.DataFrame, inventory_begin_df: pd.DataF
     frame.loc[frame["calculated_end_qty"].isna(), "actual_usage_qty"] = np.nan
     return frame
 
-def build_bom_expected_usage(bom_df: pd.DataFrame, receipt_df: pd.DataFrame) -> pd.DataFrame:
+
+def build_bom_expected_usage(bom_df, receipt_df) -> pd.DataFrame:
+    if bom_df is None:
+        bom_df = pd.DataFrame()
+    if receipt_df is None:
+        receipt_df = pd.DataFrame()
     if bom_df.empty or receipt_df.empty:
         return pd.DataFrame()
     merged = bom_df.merge(
@@ -136,7 +167,18 @@ def build_bom_expected_usage(bom_df: pd.DataFrame, receipt_df: pd.DataFrame) -> 
     )
     return material_view
 
-def build_material_analysis(purchase_df: pd.DataFrame, inventory_begin_df: pd.DataFrame, inventory_end_df: pd.DataFrame, bom_df: pd.DataFrame, receipt_df: pd.DataFrame) -> pd.DataFrame:
+
+def build_material_analysis(purchase_df, inventory_begin_df, inventory_end_df, bom_df, receipt_df) -> pd.DataFrame:
+    if purchase_df is None:
+        purchase_df = pd.DataFrame()
+    if inventory_begin_df is None:
+        inventory_begin_df = pd.DataFrame()
+    if inventory_end_df is None:
+        inventory_end_df = pd.DataFrame()
+    if bom_df is None:
+        bom_df = pd.DataFrame()
+    if receipt_df is None:
+        receipt_df = pd.DataFrame()
     usage = build_material_usage(purchase_df, inventory_begin_df, inventory_end_df)
     expected = build_bom_expected_usage(bom_df, receipt_df)
     if usage.empty and expected.empty:
@@ -146,7 +188,10 @@ def build_material_analysis(purchase_df: pd.DataFrame, inventory_begin_df: pd.Da
     out["usage_gap_qty"] = out["actual_usage_qty"] - out["expected_usage_qty"]
     return out
 
-def get_product_material_breakdown(bom_df: pd.DataFrame, product_id: str, month: str, receipt_qty: float) -> pd.DataFrame:
+
+def get_product_material_breakdown(bom_df, product_id: str, month: str, receipt_qty: float) -> pd.DataFrame:
+    if bom_df is None or (hasattr(bom_df, "empty") and bom_df.empty):
+        return pd.DataFrame()
     product_bom = bom_df[(bom_df["product_id"] == product_id) & (bom_df["month"] == month)].copy()
     if product_bom.empty:
         return product_bom

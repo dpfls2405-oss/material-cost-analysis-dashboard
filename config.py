@@ -30,10 +30,18 @@ TABLE_MAP = {
     "inventory_end": "inventory_end",
 }
 
+
 def get_secret(name: str, default: str = "") -> str:
-    if name in st.secrets:
-        return st.secrets[name]
+    """Read a secret from st.secrets (Streamlit Cloud) or environment variables."""
+    try:
+        # st.secrets raises FileNotFoundError if secrets.toml is missing entirely,
+        # and KeyError if the key is absent — handle both gracefully.
+        if name in st.secrets:
+            return st.secrets[name]
+    except Exception:
+        pass
     return os.getenv(name, default)
+
 
 def supabase_enabled() -> bool:
     return bool(get_secret("SUPABASE_URL") and get_secret("SUPABASE_KEY"))

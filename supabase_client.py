@@ -1,11 +1,18 @@
 from __future__ import annotations
 
-from typing import Iterable
 import pandas as pd
-from supabase import create_client, Client
 from utils.config import get_secret, TABLE_MAP
 
-def get_client() -> Client:
+
+def get_client():
+    """Return a Supabase client. Raises ValueError if credentials are missing."""
+    try:
+        from supabase import create_client
+    except ImportError as exc:
+        raise ImportError(
+            "supabase-py is not installed. Add `supabase>=2.7` to requirements.txt."
+        ) from exc
+
     url = get_secret("SUPABASE_URL")
     key = get_secret("SUPABASE_KEY")
     if not url or not key:
