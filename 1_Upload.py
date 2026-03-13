@@ -1,17 +1,14 @@
 from __future__ import annotations
 
-import sys
-import os
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import streamlit as st
 import pandas as pd
 
-from utils.config import DISPLAY_NAMES, DATASET_TYPES, supabase_enabled
-from utils.helpers import read_csv_flexible, parse_filename
-from utils.validator import summarize_validation
-from utils.transformers import TRANSFORMER_MAP
-from utils.supabase_client import upsert_dataframe, insert_upload_log
+from config import DISPLAY_NAMES, DATASET_TYPES, supabase_enabled
+from helpers import read_csv_flexible, parse_filename
+from validator import summarize_validation
+from transformers import TRANSFORMER_MAP
+from supabase_client import upsert_dataframe, insert_upload_log
 
 st.title("📥 CSV 업로드")
 st.caption("형식 검증 후 Supabase에 적재합니다. 파일명은 YYYY-MM_dataset.csv 형식이어야 합니다.")

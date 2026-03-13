@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import pandas as pd
-from utils.config import get_secret, TABLE_MAP
+from config import get_secret, TABLE_MAP
 
 
 def get_client():

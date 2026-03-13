@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from pathlib import Path
 import pandas as pd
-from utils.helpers import parse_filename
-from utils.transformers import TRANSFORMER_MAP
-from utils.config import supabase_enabled
+from helpers import parse_filename
+from transformers import TRANSFORMER_MAP
+from config import supabase_enabled
 
 LOCAL_DATA_DIR = Path("data")
 
@@ -28,7 +28,7 @@ def load_local_raw_files() -> dict[str, pd.DataFrame]:
 def load_standardized_data() -> dict[str, pd.DataFrame]:
     if supabase_enabled():
         # Lazy import so the app starts even if supabase-py has issues at import time
-        from utils.supabase_client import fetch_table
+        from supabase_client import fetch_table
         return {
             "receipt_performance": fetch_table("receipt_performance"),
             "material_cost": fetch_table("material_cost"),

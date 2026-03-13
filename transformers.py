@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import pandas as pd
-from utils.helpers import to_number, pct_to_float, normalize_text
+from helpers import to_number, pct_to_float, normalize_text
 
 def standardize_receipt(df: pd.DataFrame, month: str, source_file_name: str) -> pd.DataFrame:
     out = pd.DataFrame({

@@ -1,14 +1,11 @@
 from __future__ import annotations
 
-import sys
-import os
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import streamlit as st
 
-from utils.data_loader import load_standardized_data
-from utils.calculators import build_material_analysis
-from utils.charts import bar_material_gap
+from data_loader import load_standardized_data
+from calculators import build_material_analysis
+from charts import bar_material_gap
 
 st.title("🧱 Material Analysis")
 

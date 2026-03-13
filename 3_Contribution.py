@@ -1,14 +1,11 @@
 from __future__ import annotations
 
-import sys
-import os
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import streamlit as st
 
-from utils.data_loader import load_standardized_data
-from utils.calculators import build_product_base, calculate_monthly_totals, enrich_product_base, get_top_contributors, prepare_waterfall_frame
-from utils.charts import bar_contribution, waterfall_contribution
+from data_loader import load_standardized_data
+from calculators import build_product_base, calculate_monthly_totals, enrich_product_base, get_top_contributors, prepare_waterfall_frame
+from charts import bar_contribution, waterfall_contribution
 
 st.title("🏆 Contribution")
 

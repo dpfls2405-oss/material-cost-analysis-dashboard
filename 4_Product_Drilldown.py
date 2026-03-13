@@ -1,19 +1,16 @@
 from __future__ import annotations
 
-import sys
-import os
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import streamlit as st
 
-from utils.data_loader import load_standardized_data
-from utils.calculators import (
+from data_loader import load_standardized_data
+from calculators import (
     build_product_base,
     calculate_monthly_totals,
     enrich_product_base,
     get_product_material_breakdown,
 )
-from utils.charts import line_product_metrics
+from charts import line_product_metrics
 
 st.title("🔎 Product Drilldown")
 
